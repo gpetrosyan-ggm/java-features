@@ -1,23 +1,30 @@
 package general.gson;
 
 import com.google.gson.*;
+import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 
-import java.io.IOException;
-import java.io.StringReader;
+import java.io.*;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.Type;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 
 public class GsonDemo {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         Gson gson = new Gson();
         Gson gsonBuilder = new GsonBuilder()
                 .setPrettyPrinting()
+                .excludeFieldsWithModifiers(Modifier.TRANSIENT)
 //                .excludeFieldsWithoutExposeAnnotation()
                 .serializeNulls()
                 .registerTypeAdapter(Car.class, new CarCreator())
                 .registerTypeAdapter(Boolean.class, new BooleanDeserializer())
                 .registerTypeAdapter(Boolean.class, new BooleanSerializer())
+                .registerTypeAdapter(Student.class, new StudentAdapter())
+//                .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_DOTS)
                 .setVersion(2.0)
                 .create();
 
@@ -25,10 +32,56 @@ public class GsonDemo {
 //        parseFromCar(gsonBuilder);
 //        parseFromPerson(gsonBuilder);
 //        parseToPerson(gsonBuilder);
-        readerDemo();
-        parserDemo();
+//        genericDemo(gsonBuilder);
+//        readerDemo();
+//        parserDemo();
+//        customAdapterDemo(gsonBuilder);
+        webUrlDemo(gsonBuilder);
     }
 
+    public static void webUrlDemo(Gson gson) throws IOException {
+        String webPage = "http://time.jsontest.com";
+        try (InputStream is = new URL(webPage).openStream();
+             Reader reader = new InputStreamReader(is, StandardCharsets.UTF_8)) {
+
+            TimeData td = gson.fromJson(reader, TimeData.class);
+            System.out.println(td);
+        }
+    }
+
+    public static void customAdapterDemo(Gson gson) {
+        String jsonString = "{\"name\":\"Mahesh\", \"rollNo\":1}";
+        Student student = gson.fromJson(jsonString, Student.class);
+        System.out.println(student);
+
+        jsonString = gson.toJson(student);
+        System.out.println(jsonString);
+    }
+
+    public static void genericDemo(Gson gson) {
+        Circle circle = new Circle(5.0);
+
+        Shape<Circle> shape = new Shape<>();
+        shape.setShape(circle);
+
+        // Define a Type shapeType of type circle.
+        Type shapeType = new TypeToken<Shape<Circle>>() {
+        }.getType();
+
+        //Serialize the json as ShapeType
+        String jsonString = gson.toJson(shape, shapeType);
+        System.out.println(jsonString);
+
+        Shape shape1 = gson.fromJson(jsonString, Shape.class);
+        System.out.println(shape1.getClass());
+        System.out.println(shape1.toString());
+        System.out.println(shape1.getArea());
+
+        Shape shape2 = gson.fromJson(jsonString, shapeType);
+        System.out.println(shape2.getClass());
+        System.out.println(shape2.toString());
+        System.out.println(shape2.getArea());
+    }
 
     public static void parserDemo() {
         String json = "{ \"f1\":\"Hello\",\"f2\":{\"f3\":\"World\"}}";
@@ -96,24 +149,18 @@ public class GsonDemo {
                 System.out.println(nextToken);
 
                 if (JsonToken.BEGIN_OBJECT.equals(nextToken)) {
-
                     jsonReader.beginObject();
-
+                } else if (JsonToken.END_OBJECT.equals(nextToken)) {
+                    jsonReader.endObject();
                 } else if (JsonToken.NAME.equals(nextToken)) {
-
                     String name = jsonReader.nextName();
                     System.out.println(name);
-
                 } else if (JsonToken.STRING.equals(nextToken)) {
-
                     String value = jsonReader.nextString();
                     System.out.println(value);
-
                 } else if (JsonToken.NUMBER.equals(nextToken)) {
-
                     long value = jsonReader.nextLong();
                     System.out.println(value);
-
                 }
             }
         } catch (IOException e) {
