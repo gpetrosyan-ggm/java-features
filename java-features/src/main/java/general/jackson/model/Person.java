@@ -9,6 +9,10 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
 @Getter
 @Setter
 @ToString
@@ -16,20 +20,25 @@ import lombok.ToString;
 @JsonPropertyOrder({"fullName", "lastName"})
 //@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NON_PRIVATE)
 //@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonRootName(value = "PERSON-INFO", namespace = "PERSONS")
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class Person {
 
     @JsonIgnore
     private Long id;
+
+    private String fakeName;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy")
+    public Date eventDate;
 
     @JsonSetter("full-name")
     private String fullName;
 
     private String firstName;
 
+    @JsonAlias({"lName", "l_name"})
     private String lastName;
-
-    //    @JacksonInject
-    public String source = null;
 
     @JsonDeserialize(using = OptimizedBooleanDeserializer.class)
     @JsonSerialize(using = OptimizedBooleanSerializer.class)
@@ -47,6 +56,17 @@ public class Person {
         public String zipCode;
         public String city;
         public String country;
+    }
+
+    private Map<String, String> properties = new HashMap<>();
+
+    @JsonAnyGetter
+    public Map<String, String> getProperties() {
+        return properties;
+    }
+
+    public void add(String property, String value) {
+        properties.put(property, value);
     }
 
 }

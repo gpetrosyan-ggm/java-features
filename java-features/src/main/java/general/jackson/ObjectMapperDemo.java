@@ -12,15 +12,20 @@ import general.jackson.model.Car;
 import general.jackson.serializer.CarDeserializer;
 import general.jackson.serializer.CarSerializer;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Iterator;
 import java.util.Map;
 
 public class ObjectMapperDemo {
 
     public static void main(String[] args) throws JsonProcessingException {
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm a z");
+
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         objectMapper.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false);
+        objectMapper.setDateFormat(df);
 
         jsonNodeTreeFieldDemo(objectMapper);
     }
